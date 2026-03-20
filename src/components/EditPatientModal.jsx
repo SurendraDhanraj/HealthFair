@@ -9,19 +9,19 @@ export function EditPatientModal({ patient, onClose }) {
     
     const { register, handleSubmit, reset } = useForm({
         defaultValues: {
-            firstName: patient.firstName || "",
-            surname: patient.surname || "",
-            dob: patient.dob || "",
-            gender: patient.gender || "male",
-            phone: patient.phone || "",
-            email: patient.email || "",
-            height: patient.height || "",
-            weight: patient.weight || "",
-            bpSystolic: patient.bpSystolic || "",
-            bpDiastolic: patient.bpDiastolic || "",
-            pulse: patient.pulse || "",
-            bloodSugar: patient.bloodSugar || "",
-            cholesterol: patient.cholesterol || "",
+            firstName: patient?.firstName || "",
+            surname: patient?.surname || "",
+            dob: patient?.dob || "",
+            gender: patient?.gender || "male",
+            phone: patient?.phone || "",
+            email: patient?.email || "",
+            height: patient?.height || "",
+            weight: patient?.weight || "",
+            bpSystolic: patient?.bpSystolic || "",
+            bpDiastolic: patient?.bpDiastolic || "",
+            pulse: patient?.pulse || "",
+            bloodSugar: patient?.bloodSugar || "",
+            cholesterol: patient?.cholesterol || "",
         }
     });
 
