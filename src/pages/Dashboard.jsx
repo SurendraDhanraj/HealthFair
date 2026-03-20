@@ -20,14 +20,14 @@ export function Dashboard() {
         <div className="bg-surface text-on-surface min-h-screen">
             <nav className="fixed top-0 w-full z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl shadow-sm shadow-blue-900/5">
                 <div className="flex items-center justify-between px-6 py-4 max-w-full mx-auto">
-                    <div className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Heritage Logo" className="h-10 w-auto object-contain" />
-                        <h1 className="font-headline font-bold text-2xl tracking-tight text-blue-800 dark:text-blue-200 tracking-tighter">Heritage Health Fair</h1>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <img src="/logo.png" alt="Heritage Logo" className="h-8 sm:h-10 w-auto object-contain" />
+                        <h1 className="font-headline font-bold text-lg sm:text-2xl tracking-tighter text-blue-800 dark:text-blue-200 truncate max-w-[120px] sm:max-w-none">Heritage Health Fair</h1>
                     </div>
-                    <div className="hidden md:flex items-center gap-8">
-                        <button onClick={() => setActiveTab('waitlist')} className={`font-semibold py-1 border-b-2 transition-colors ${activeTab === 'waitlist' ? 'text-blue-700 dark:text-blue-400 border-blue-600' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 rounded-lg'}`}>Waitlist</button>
-                        <button onClick={() => setActiveTab('completed')} className={`font-semibold py-1 border-b-2 transition-colors ${activeTab === 'completed' ? 'text-blue-700 dark:text-blue-400 border-blue-600' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 rounded-lg'}`}>Completed</button>
-                        <button onClick={() => setActiveTab('analytics')} className={`font-semibold py-1 border-b-2 transition-colors ${activeTab === 'analytics' ? 'text-blue-700 dark:text-blue-400 border-blue-600' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 rounded-lg'}`}>Analytics</button>
+                    <div className="flex items-center gap-2 sm:gap-4 md:gap-8 overflow-x-auto no-scrollbar">
+                        <button onClick={() => setActiveTab('waitlist')} className={`font-bold py-1 border-b-2 transition-all whitespace-nowrap text-xs sm:text-sm md:text-base ${activeTab === 'waitlist' ? 'text-blue-700 dark:text-blue-400 border-blue-600 px-2' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 rounded-lg'}`}>Waitlist</button>
+                        <button onClick={() => setActiveTab('completed')} className={`font-bold py-1 border-b-2 transition-all whitespace-nowrap text-xs sm:text-sm md:text-base ${activeTab === 'completed' ? 'text-blue-700 dark:text-blue-400 border-blue-600 px-2' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 rounded-lg'}`}>Completed</button>
+                        <button onClick={() => setActiveTab('analytics')} className={`font-bold py-1 border-b-2 transition-all whitespace-nowrap text-xs sm:text-sm md:text-base ${activeTab === 'analytics' ? 'text-blue-700 dark:text-blue-400 border-blue-600 px-2' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 rounded-lg'}`}>Analytics</button>
                     </div>
                     <div className="flex items-center gap-4">
                         <button className="material-symbols-outlined text-on-surface-variant hover:bg-blue-50 p-2 rounded-full transition-colors">notifications</button>
