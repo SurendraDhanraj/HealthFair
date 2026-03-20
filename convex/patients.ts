@@ -62,6 +62,13 @@ export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
 });
 
+export const deletePatient = mutation({
+  args: { id: v.id("patients") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
 export const saveReportId = mutation({
   args: {
     patientId: v.id("patients"),

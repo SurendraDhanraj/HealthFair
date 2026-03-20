@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 
 export function EditPatientModal({ patient, onClose }) {
     const updatePatient = useMutation(api.patients.updatePatient);
+    const deletePatient = useMutation(api.patients.deletePatient);
     
     const { register, handleSubmit, reset } = useForm({
         defaultValues: {
@@ -76,6 +77,18 @@ export function EditPatientModal({ patient, onClose }) {
         } catch(e) {
             console.error(e);
             alert("Failed to update patient data. Connect to Convex Backend.");
+        }
+    };
+
+    const handleDelete = async () => {
+        if (window.confirm(`Are you sure you want to completely delete the record for ${patient.firstName} ${patient.surname}? This action cannot be undone.`)) {
+            try {
+                await deletePatient({ id: patient._id });
+                onClose();
+            } catch (e) {
+                console.error(e);
+                alert("Failed to delete patient.");
+            }
         }
     };
 
@@ -165,9 +178,14 @@ export function EditPatientModal({ patient, onClose }) {
                         </div>
                     </section>
                     
-                    <div className="pt-6 border-t border-outline-variant/20 flex gap-4 justify-end pb-2">
-                        <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-bold hover:bg-surface-variant transition-colors">Cancel</button>
-                        <button type="submit" className="px-6 py-2.5 rounded-lg bg-primary text-on-primary font-bold hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20">Save Changes</button>
+                    <div className="pt-6 border-t border-outline-variant/20 flex gap-4 justify-between items-center pb-2">
+                        <button type="button" onClick={handleDelete} className="px-4 py-2.5 rounded-lg text-error hover:bg-error/10 font-bold transition-colors flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[20px]">delete</span> Delete Record
+                        </button>
+                        <div className="flex gap-4 items-center">
+                            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-bold hover:bg-surface-variant transition-colors">Cancel</button>
+                            <button type="submit" className="px-6 py-2.5 rounded-lg bg-primary text-on-primary font-bold hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20">Save Changes</button>
+                        </div>
                     </div>
                 </form>
             </div>
