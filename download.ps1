@@ -1,0 +1,14 @@
+New-Item -ItemType Directory -Force -Path "c:\Users\Spud\HealthFair\app\new_stitch_files"
+cd c:\Users\Spud\HealthFair\app\new_stitch_files
+
+Invoke-WebRequest -Uri "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzAwMDY0ZDc3M2FmNmZkNGYwMjJkNWNjYzM2MmJjNjM3EgsSBxDVgtWr9QsYAZIBIwoKcHJvamVjdF9pZBIVQhM5MjQ4NzY3Njg1NDMzNDk2OTU0&filename=&opi=89354086" -OutFile "dashboard.html"
+
+Invoke-WebRequest -Uri "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzAwMDY0ZDc3Mzc5YWYzNDYwNjM5NTYzMmExMDM4NjdmEgsSBxDVgtWr9QsYAZIBIwoKcHJvamVjdF9pZBIVQhM5MjQ4NzY3Njg1NDMzNDk2OTU0&filename=&opi=89354086" -OutFile "registration.html"
+
+Invoke-WebRequest -Uri "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzAwMDY0ZDc3M2JmYmQ3MzYwMzMyY2NhMWE4MzEzMzc5EgsSBxDVgtWr9QsYAZIBIwoKcHJvamVjdF9pZBIVQhM5MjQ4NzY3Njg1NDMzNDk2OTU0&filename=&opi=89354086" -OutFile "vitals.html"
+
+Invoke-WebRequest -Uri "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzAwMDY0ZDc3M2QzNzFlYzYwNDEwZjI4OGQzMGNjZDk3EgsSBxDVgtWr9QsYAZIBIwoKcHJvamVjdF9pZBIVQhM5MjQ4NzY3Njg1NDMzNDk2OTU0&filename=&opi=89354086" -OutFile "bp.html"
+
+Invoke-WebRequest -Uri "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzI0OTJiNjJkMWY3NjRmNDE5M2VkNWY1OWI0MmEyZmU2EgsSBxDVgtWr9QsYAZIBIwoKcHJvamVjdF9pZBIVQhM5MjQ4NzY3Njg1NDMzNDk2OTU0&filename=&opi=89354086" -OutFile "labs.html"
+
+Invoke-WebRequest -Uri "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzAwMDY0ZDc3NDM3OTc3OTkwMDMwM2U2MmM3MWY2MThiEgsSBxDVgtWr9QsYAZIBIwoKcHJvamVjdF9pZBIVQhM5MjQ4NzY3Njg1NDMzNDk2OTU0&filename=&opi=89354086" -OutFile "report.html"

@@ -1,0 +1,83 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+    darkMode: "class",
+    content: [
+      "./index.html",
+      "./src/**/*.{js,ts,jsx,tsx}",
+    ],
+    theme: {
+        extend: {
+            colors: {
+                // Dashboard, BP, Labs, Report Tokens
+                "surface-container-low": "#f2f3fd",
+                "primary": "#1A73E8", // Reconciled Registration & Dashboard primary
+                "on-secondary-fixed-variant": "#005145",
+                "surface-container-lowest": "#ffffff",
+                "on-background": "#191c23",
+                "error": "#ba1a1a",
+                "secondary-fixed-dim": "#44ddc1",
+                "tertiary-fixed-dim": "#ffb691",
+                "inverse-on-surface": "#eff0fa",
+                "background": "#f9f9ff",
+                "on-surface": "#191c23",
+                "on-primary-container": "#001D47",
+                "on-primary": "#ffffff",
+                "on-tertiary-fixed-variant": "#783100",
+                "surface-tint": "#005bc0",
+                "on-error-container": "#93000a",
+                "secondary-fixed": "#68fadd",
+                "tertiary": "#9e4300",
+                "error-container": "#ffdad6",
+                "on-primary-fixed-variant": "#004493",
+                "surface": "#F8FAFD",
+                "surface-bright": "#f9f9ff",
+                "primary-fixed": "#d8e2ff",
+                "on-secondary-container": "#007261",
+                "primary-container": "#D2E3FC",
+                "outline-variant": "#c1c6d6",
+                "on-secondary": "#ffffff",
+                "inverse-primary": "#adc7ff",
+                "on-tertiary-fixed": "#341100",
+                "on-surface-variant": "#414754",
+                "tertiary-fixed": "#ffdbcb",
+                "surface-dim": "#d8d9e3",
+                "tertiary-container": "#c55500",
+                "on-primary-fixed": "#001a41",
+                "surface-container-highest": "#e0e2ec",
+                "surface-container": "#ecedf7",
+                "on-error": "#ffffff",
+                "primary-fixed-dim": "#adc7ff",
+                "surface-variant": "#e0e2ec",
+                "outline": "#727785",
+                "secondary": "#006b5c",
+                "on-tertiary-container": "#0e0200",
+                "on-tertiary": "#ffffff",
+                "secondary-container": "#68fadd",
+                "inverse-surface": "#2d3038",
+                "surface-container-high": "#e6e8f2",
+                "on-secondary-fixed": "#00201a",
+                // Extra Tokens from Vitals/Registration
+                "success": "#1E8E3E",
+                "success-container": "#CEEAD6",
+            },
+            fontFamily: {
+                "sans": ["Manrope", "sans-serif"],
+                "headline": ["Manrope", "sans-serif"],
+                "body": ["Public Sans", "sans-serif"],
+                "label": ["Public Sans", "sans-serif"]
+            },
+            borderRadius: {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "2xl": "1.5rem",
+                "3xl": "2rem",
+                "full": "9999px"
+            },
+        },
+    },
+    plugins: [
+        require('@tailwindcss/forms'),
+        require('@tailwindcss/container-queries'),
+    ],
+}

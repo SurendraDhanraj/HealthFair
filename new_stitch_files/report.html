@@ -1,0 +1,319 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Health Fair Pro | Clinical Health Summary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Public+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary-container": "#ffffff",
+                        "secondary-fixed": "#68fadd",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#2d3038",
+                        "background": "#f9f9ff",
+                        "primary-fixed-dim": "#adc7ff",
+                        "surface-container-highest": "#e0e2ec",
+                        "error-container": "#ffdad6",
+                        "secondary": "#006b5c",
+                        "on-tertiary-fixed": "#341100",
+                        "surface-bright": "#f9f9ff",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#005bc0",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#68fadd",
+                        "secondary-fixed-dim": "#44ddc1",
+                        "surface-container-high": "#e6e8f2",
+                        "outline-variant": "#c1c6d6",
+                        "on-tertiary-container": "#0e0200",
+                        "on-tertiary-fixed-variant": "#783100",
+                        "surface": "#f9f9ff",
+                        "surface-container-low": "#f2f3fd",
+                        "on-secondary-container": "#007261",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#005bbf",
+                        "tertiary-fixed": "#ffdbcb",
+                        "outline": "#727785",
+                        "tertiary-container": "#c55500",
+                        "tertiary": "#9e4300",
+                        "surface-dim": "#d8d9e3",
+                        "primary-container": "#1a73e8",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "on-primary-fixed-variant": "#004493",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#005145",
+                        "on-primary-fixed": "#001a41",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c23",
+                        "surface-variant": "#e0e2ec",
+                        "on-surface": "#191c23",
+                        "on-secondary-fixed": "#00201a",
+                        "inverse-on-surface": "#eff0fa",
+                        "inverse-primary": "#adc7ff",
+                        "on-surface-variant": "#414754",
+                        "surface-container": "#ecedf7"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Public Sans"],
+                        "label": ["Public Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        @media print {
+            body { background: white; }
+            .no-print { display: none; }
+            .print-container { width: 8.5in; height: 11in; padding: 0.5in; margin: 0; box-shadow: none; }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .clinical-gradient {
+            background: linear-gradient(135deg, #005bbf 0%, #1a73e8 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface-container-low font-body text-on-surface antialiased flex flex-col items-center py-10">
+<!-- TopAppBar Navigation Shell -->
+<header class="sticky top-0 z-50 flex items-center justify-between w-full px-8 py-4 max-w-[8.5in] mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm dark:shadow-none mb-6 rounded-xl">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl" style="">health_metrics</span>
+<span class="text-xl font-bold tracking-tight text-blue-800 dark:text-blue-200 font-headline" style="">Heriitage Health Fair</span>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-blue-700 dark:text-blue-400 font-semibold font-headline text-sm tracking-tight" href="#" style="">Report Overview</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-headline text-sm tracking-tight px-2 py-1 rounded" href="#" style="">Vitals</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-headline text-sm tracking-tight px-2 py-1 rounded" href="#" style="">Lab Results</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-500 hover:bg-slate-50 p-2 rounded-full transition-colors" style="">print</button>
+<button class="material-symbols-outlined text-slate-500 hover:bg-slate-50 p-2 rounded-full transition-colors" style="">share</button>
+<button class="material-symbols-outlined text-slate-500 hover:bg-slate-50 p-2 rounded-full transition-colors" style="">download</button>
+</div>
+</header>
+<!-- Main Report Canvas (8.5 x 11 aspect) -->
+<main class="print-container w-[8.5in] min-h-[11in] bg-surface-container-lowest shadow-2xl rounded-sm p-12 flex flex-col gap-10 relative overflow-hidden">
+<!-- Patient Context Header (Glassmorphism inspired) -->
+<section class="flex justify-between items-start border-b border-outline-variant/20 pb-8">
+<div class="space-y-1">
+<h1 class="font-headline font-extrabold text-3xl text-on-surface tracking-tight" style="">Clinical Health Summary</h1>
+<p class="text-on-surface-variant font-medium tracking-wide text-sm" style="">HEALTH FAIR| OFFICIAL CLINICAL RECORD</p>
+</div>
+<div class="text-right space-y-2">
+<div class="flex flex-col">
+<span class="text-xs uppercase tracking-widest text-on-surface-variant font-bold" style="">Patient Name</span>
+<span class="font-headline text-xl font-bold text-primary" style="">John Doe</span>
+</div>
+<div class="flex gap-4 text-sm justify-end">
+<p class="" style=""><span class="text-on-surface-variant" style="">Age:</span> <span class="font-semibold" style="">45</span></p>
+<p class="" style=""><span class="text-on-surface-variant" style="">Sex:</span> <span class="font-semibold" style="">Male</span></p>
+</div>
+<p class="text-xs font-mono bg-surface-container-high px-2 py-1 rounded" style="">ID: #HF-99210</p>
+<p class="text-xs text-on-surface-variant" style="">Visit Date: Oct 24, 2023</p>
+</div>
+</section>
+<!-- Section 1: Overall Health Risk Profile -->
+<section class="space-y-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="">analytics</span>
+<h2 class="font-headline font-bold text-xl" style="">Overall Health Risk Profile</h2>
+</div>
+<div class="bg-surface-container-low p-8 rounded-xl space-y-8">
+<div class="flex justify-between items-end mb-2">
+<div class="space-y-1">
+<span class="text-on-surface-variant text-sm font-semibold uppercase tracking-wider" style="">Current Status</span>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span class="font-headline text-2xl font-extrabold text-secondary" style="">Low Risk</span>
+</div>
+</div>
+<span class="text-on-surface-variant text-xs italic" style="">Risk calculated based on present biomarkers</span>
+</div>
+<div class="relative pt-6">
+<!-- Gradient Risk Bar -->
+<div class="h-4 w-full rounded-full bg-gradient-to-r from-secondary via-tertiary-fixed-dim to-error"></div>
+<!-- Indicator Needle -->
+<div class="absolute top-0 left-[15%] flex flex-col items-center -ml-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">arrow_drop_down</span>
+<div class="w-1 h-6 bg-primary rounded-full"></div>
+</div>
+<div class="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">
+<span class="" style="">Optimal</span>
+<span class="" style="">Moderate</span>
+<span class="" style="">Elevated</span>
+<span class="" style="">High Risk</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Vitals & Measurements -->
+<section class="space-y-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="">monitor_heart</span>
+<h2 class="font-headline font-bold text-xl" style="">Vitals &amp; Measurements</h2>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<!-- Blood Pressure Card -->
+<div class="bg-white border border-outline-variant/10 p-6 rounded-xl flex items-center justify-between">
+<div class="w-1/3">
+<p class="text-sm font-semibold text-on-surface-variant" style="">Blood Pressure</p>
+<p class="text-3xl font-headline font-extrabold" style="">120/80 <span class="text-sm font-normal text-on-surface-variant" style="">mmHg</span></p>
+</div>
+<div class="w-2/3 space-y-2">
+<div class="flex justify-between text-xs font-bold">
+<span class="text-secondary uppercase" style="">Optimal</span>
+<span class="text-on-surface-variant" style="">Range: 90/60 - 120/80</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary" style="width: 40%"></div>
+<div class="h-full border-r-2 border-white bg-secondary opacity-50" style="width: 20%"></div>
+<div class="h-full border-r-2 border-white bg-tertiary-fixed-dim" style="width: 20%"></div>
+<div class="h-full bg-error opacity-40" style="width: 20%"></div>
+</div>
+<div class="flex justify-end">
+<span class="bg-secondary/10 text-secondary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest" style="">Normal Range</span>
+</div>
+</div>
+</div>
+<!-- Pulse Rate Card -->
+<div class="bg-white border border-outline-variant/10 p-6 rounded-xl flex items-center justify-between">
+<div class="w-1/3">
+<p class="text-sm font-semibold text-on-surface-variant" style="">Pulse Rate</p>
+<p class="text-3xl font-headline font-extrabold" style="">72 <span class="text-sm font-normal text-on-surface-variant" style="">BPM</span></p>
+</div>
+<div class="w-2/3 space-y-2">
+<div class="flex justify-between text-xs font-bold">
+<span class="text-secondary uppercase" style="">Normal</span>
+<span class="text-on-surface-variant" style="">Range: 60 - 100</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-tertiary-fixed-dim opacity-40" style="width: 20%"></div>
+<div class="h-full border-r-2 border-white bg-secondary" style="width: 40%"></div>
+<div class="h-full bg-error opacity-40" style="width: 40%"></div>
+</div>
+<div class="flex justify-end">
+<span class="bg-secondary/10 text-secondary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest" style="">In Range</span>
+</div>
+</div>
+</div>
+<!-- BMI Card -->
+<div class="bg-white border border-outline-variant/10 p-6 rounded-xl flex items-center justify-between">
+<div class="w-1/3">
+<p class="text-sm font-semibold text-on-surface-variant" style="">Body Mass Index (BMI)</p>
+<p class="text-3xl font-headline font-extrabold" style="">24.2 <span class="text-sm font-normal text-on-surface-variant" style="">kg/m2</span></p>
+</div>
+<div class="w-2/3 space-y-2">
+<div class="flex justify-between text-xs font-bold">
+<span class="text-secondary uppercase" style="">Healthy</span>
+<span class="text-on-surface-variant" style="">Range: 18.5 - 24.9</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-tertiary-fixed-dim opacity-40" style="width: 25%"></div>
+<div class="h-full border-r-2 border-white bg-secondary" style="width: 35%"></div>
+<div class="h-full border-r-2 border-white bg-tertiary-fixed-dim" style="width: 20%"></div>
+<div class="h-full bg-error" style="width: 20%"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Laboratory Results -->
+<section class="space-y-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="">biotech</span>
+<h2 class="font-headline font-bold text-xl" style="">Laboratory Results</h2>
+</div>
+<div class="grid grid-cols-2 gap-6">
+<!-- Random Blood Sugar -->
+<div class="bg-surface-container-low p-6 rounded-2xl space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest" style="">Blood Sugar</p>
+<h3 class="text-2xl font-headline font-bold mt-1" style="">95 <span class="text-sm font-normal" style="">mg/dL</span></h3>
+</div>
+<span class="bg-secondary text-white text-[10px] px-2 py-1 rounded-full font-bold" style="">OPTIMAL</span>
+</div>
+<div class="space-y-1">
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 45%"></div>
+</div>
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant">
+<span class="" style="">70</span>
+<span class="" style="">140</span>
+</div>
+</div>
+</div>
+<!-- Total Cholesterol -->
+<div class="bg-surface-container-low p-6 rounded-2xl space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest" style="">Total Cholesterol</p>
+<h3 class="text-2xl font-headline font-bold mt-1" style="">202 <span class="text-sm font-normal" style="">mg/dL</span></h3>
+</div>
+<span class="bg-tertiary text-white text-[10px] px-2 py-1 rounded-full font-bold" style="">BORDERLINE</span>
+</div>
+<div class="space-y-1">
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary" style="width: 68%"></div>
+</div>
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant">
+<span class="" style="">125</span>
+<span class="" style="">240</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Clinical Footnote Spacer -->
+<div class="mt-auto pt-10 border-t border-outline-variant/10">
+<div class="flex gap-6 items-start opacity-70">
+<span class="material-symbols-outlined text-primary-container" style="">info</span>
+<p class="text-xs leading-relaxed font-medium text-on-surface-variant" style="">
+                    This report is for informational purposes only. The results presented reflect a specific point in time and may be influenced by various physiological factors. Please consult with a healthcare professional for a complete diagnosis and medical advice.
+                </p>
+</div>
+</div>
+<!-- Decorative Branding Element -->
+<div class="absolute -right-16 -bottom-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+</main>
+<!-- Footer Component Shell -->
+<footer class="w-full max-w-[8.5in] mx-auto py-8 flex justify-between items-center px-8 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 mt-10 rounded-xl mb-10">
+<p class="font-public-sans text-xs uppercase tracking-widest text-slate-400 dark:text-slate-500" style="">© 2024 Health Fair Pro | Clinical Precision Report</p>
+<div class="flex gap-6">
+<a class="font-public-sans text-xs uppercase tracking-widest text-slate-400 hover:text-blue-500 transition-colors" href="#" style="">Privacy Policy</a>
+<a class="font-public-sans text-xs uppercase tracking-widest text-slate-400 hover:text-blue-500 transition-colors" href="#" style="">Terms of Service</a>
+<a class="font-public-sans text-xs uppercase tracking-widest text-slate-400 hover:text-blue-500 transition-colors" href="#" style="">Support</a>
+</div>
+</footer>
+<!-- Side Navigation (Mobile Hidden) -->
+<aside class="hidden lg:flex flex-col fixed left-10 top-1/2 -translate-y-1/2 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl gap-4 shadow-xl border border-white/20">
+<button class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-900 text-blue-700 font-bold border-r-4 border-blue-600 transition-all" style="">
+<span class="material-symbols-outlined" style="">assignment</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 transition-all" style="">
+<span class="material-symbols-outlined" style="">monitor_heart</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 transition-all" style="">
+<span class="material-symbols-outlined" style="">biotech</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 transition-all" style="">
+<span class="material-symbols-outlined" style="">description</span>
+</button>
+<div class="h-px bg-slate-200 dark:bg-slate-800 my-2"></div>
+<button class="w-12 h-12 flex items-center justify-center rounded-2xl clinical-gradient text-white shadow-lg" style="">
+<span class="material-symbols-outlined" style="">picture_as_pdf</span>
+</button>
+</aside>
+</body></html>
