@@ -2,11 +2,13 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { EditPatientModal } from "../components/EditPatientModal";
 
 export function Dashboard() {
     const patients = useQuery(api.patients.getPatients) || [];
     const updatePatient = useMutation(api?.patients?.updatePatient || "patients:updatePatient");
     const [activeTab, setActiveTab] = useState('waitlist');
+    const [editingPatientId, setEditingPatientId] = useState(null);
 
     const handleComplete = async (id) => {
         try {
@@ -56,10 +58,17 @@ export function Dashboard() {
                     </div>
                 </div>
 
-                {activeTab === 'waitlist' && <WaitlistView patients={patients} handleComplete={handleComplete} />}
-                {activeTab === 'completed' && <CompletedView patients={patients} />}
-                {activeTab === 'analytics' && <AnalyticsView patients={patients} />}
+                {activeTab === 'waitlist' && <WaitlistView patients={patients} handleComplete={handleComplete} onEdit={setEditingPatientId} />}
+                {activeTab === 'completed' && <CompletedView patients={patients} onEdit={setEditingPatientId} />}
+                {activeTab === 'analytics' && <AnalyticsView patients={patients} onEdit={setEditingPatientId} />}
             </main>
+
+            {editingPatientId && (
+                <EditPatientModal 
+                    patient={patients.find(p => p._id === editingPatientId)} 
+                    onClose={() => setEditingPatientId(null)} 
+                />
+            )}
         </div>
     );
 }
@@ -87,7 +96,7 @@ function StationRow({name, isDone, path, patientId}) {
     );
 }
 
-function WaitlistView({ patients, handleComplete }) {
+function WaitlistView({ patients, handleComplete, onEdit }) {
     const waitlist = patients.filter(p => p.status !== 'finalized');
     
     return (
@@ -105,8 +114,11 @@ function WaitlistView({ patients, handleComplete }) {
                     const isCompleted = hasVitals && hasBP && hasLabs;
 
                     return (
-                        <div key={p._id} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-[0_8px_32px_rgba(25,28,35,0.04)] hover:shadow-[0_8px_32px_rgba(25,28,35,0.08)] transition-all">
-                            <div className="flex justify-between items-start mb-6">
+                        <div key={p._id} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-[0_8px_32px_rgba(25,28,35,0.04)] hover:shadow-[0_8px_32px_rgba(25,28,35,0.08)] transition-all relative">
+                            <button onClick={() => onEdit(p._id)} className="absolute top-4 right-4 p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors group">
+                                <span className="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <div className="flex justify-between items-start mb-6 pr-8">
                                 <div>
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">ID: #{p._id.slice(-5).toUpperCase()}</span>
                                     <h3 className="font-headline text-xl font-bold mt-2 text-on-surface">{p.firstName} {p.surname}</h3>
@@ -141,7 +153,7 @@ function WaitlistView({ patients, handleComplete }) {
     );
 }
 
-function CompletedView({ patients }) {
+function CompletedView({ patients, onEdit }) {
     const finalized = patients.filter(p => p.status === 'finalized');
     return (
         <>
@@ -151,14 +163,17 @@ function CompletedView({ patients }) {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {finalized.map(p => (
-                    <div key={p._id} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-[0_8px_32px_rgba(25,28,35,0.04)] hover:shadow-md transition-shadow flex flex-col justify-between">
+                    <div key={p._id} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-[0_8px_32px_rgba(25,28,35,0.04)] hover:shadow-md transition-shadow flex flex-col justify-between relative">
+                        <button onClick={() => onEdit(p._id)} className="absolute top-4 right-4 p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors group z-10">
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                        </button>
                         <div>
-                            <div className="flex justify-between items-start mb-4">
+                            <div className="flex justify-between items-start mb-4 pr-8">
                                 <div>
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">ID: #{p._id.slice(-5).toUpperCase()}</span>
                                     <h3 className="font-headline text-xl font-bold mt-2 text-on-surface">{p.firstName} {p.surname}</h3>
                                 </div>
-                                <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 flex items-center gap-1">
+                                <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 flex flex-col items-center justify-center gap-1">
                                     <span className="material-symbols-outlined text-[14px]">check_circle</span> Checked Out
                                 </div>
                             </div>
@@ -193,7 +208,7 @@ function CompletedView({ patients }) {
     );
 }
 
-function AnalyticsView({ patients }) {
+function AnalyticsView({ patients, onEdit }) {
     const today = new Date().toISOString().split('T')[0];
     const [startDate, setStartDate] = useState(today);
     const [endDate, setEndDate] = useState(today);
@@ -277,17 +292,18 @@ function AnalyticsView({ patients }) {
             )}
 
             {total > 0 && <HourlyVisitorChart filteredPatients={filtered} />}
-            {total > 0 && <AnalyticsTable patients={filtered} />}
+            {total > 0 && <AnalyticsTable patients={filtered} onEdit={onEdit} />}
         </>
     );
 }
 
-function AnalyticsTable({ patients }) {
-    const sorted = [...patients].sort((a, b) => b._creationTime - a._creationTime);
+function AnalyticsTable({ patients, onEdit }) {
+    // Sort patients by creation time (latest first)
+    const sortedPatients = [...patients].sort((a, b) => b._creationTime - a._creationTime);
 
     const exportToCSV = () => {
         const headers = ["Time", "First Name", "Surname", "Gender", "DOB", "Email", "Height", "Weight", "BMI", "BP Systolic", "BP Diastolic", "Blood Sugar", "Cholesterol"];
-        const rows = sorted.map(p => [
+        const rows = sortedPatients.map(p => [
             new Date(p._creationTime).toLocaleString(),
             p.firstName,
             p.surname,
@@ -331,7 +347,7 @@ function AnalyticsTable({ patients }) {
                         Export CSV
                     </button>
                     <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full uppercase tracking-widest shadow-inner">
-                        {sorted.length} Global Records
+                        {sortedPatients.length} Global Records
                     </span>
                 </div>
             </div>
@@ -339,42 +355,50 @@ function AnalyticsTable({ patients }) {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-surface-container-high/40 text-on-surface-variant uppercase text-[10px] font-bold tracking-widest">
-                            <th className="px-6 py-4 border-r border-outline-variant/5">Time</th>
-                            <th className="px-6 py-4">Name</th>
-                            <th className="px-6 py-4 text-center">Sex</th>
-                            <th className="px-6 py-4 text-center">Ht</th>
-                            <th className="px-6 py-4 text-center">Wt</th>
-                            <th className="px-6 py-4 text-center">BMI</th>
-                            <th className="px-6 py-4 text-center">BP</th>
-                            <th className="px-6 py-4 text-center">Sugar</th>
-                            <th className="px-6 py-4 text-center">Chol</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider rounded-tl-lg">Arrival Time</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Name</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Gender</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Height (cm)</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Weight (kg)</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">BMI</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">BP</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Sugar</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Cholesterol</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider rounded-tr-lg">Action</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm font-medium">
-                        {sorted.map((p, i) => (
+                        {sortedPatients.map((p, i) => (
                             <tr key={i} className="border-b border-outline-variant/5 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
-                                <td className="px-6 py-4 text-on-surface-variant text-xs font-mono border-r border-outline-variant/5">
+                                <td className="px-4 py-3 text-on-surface-variant text-xs font-mono border-r border-outline-variant/5">
                                     {new Date(p._creationTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </td>
-                                <td className="px-6 py-4 font-extrabold text-blue-800 dark:text-blue-300 tracking-tight">{p.firstName} {p.surname}</td>
-                                <td className="px-6 py-4 text-center capitalize text-xs font-bold text-on-surface-variant">{p.gender}</td>
-                                <td className="px-6 py-4 text-center font-mono text-xs">{p.height || '--'}</td>
-                                <td className="px-6 py-4 text-center font-mono text-xs">{p.weight || '--'}</td>
-                                <td className="px-6 py-4 text-center">
+                                <td className="px-4 py-3 font-extrabold text-blue-800 dark:text-blue-300 tracking-tight">{p.firstName} {p.surname}</td>
+                                <td className="px-4 py-3 text-center capitalize text-xs font-bold text-on-surface-variant">{p.gender}</td>
+                                <td className="px-4 py-3 text-center font-mono text-xs">{p.height || '--'}</td>
+                                <td className="px-4 py-3 text-center font-mono text-xs">{p.weight || '--'}</td>
+                                <td className="px-4 py-3 text-center">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.bmi >= 25 ? 'bg-error-container text-on-error-container ring-1 ring-error/20' : 'bg-green-100 text-green-700'}`}>
                                         {p.bmi || '--'}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-center font-mono text-xs font-bold">
+                                <td className="px-4 py-3 text-center font-mono text-xs font-bold">
                                     <span className={p.bpSystolic > 140 || p.bpDiastolic > 90 ? 'text-error font-extrabold' : 'text-on-surface'}>
                                         {p.bpSystolic}/{p.bpDiastolic}
                                     </span>
                                 </td>
-                                <td className={`px-6 py-4 text-center font-bold ${p.bloodSugar > 140 ? 'text-error' : 'text-primary'}`}>
+                                <td className={`px-4 py-3 text-center font-bold ${p.bloodSugar > 140 ? 'text-error' : 'text-primary'}`}>
                                     {p.bloodSugar || '--'}
                                 </td>
-                                <td className={`px-6 py-4 text-center font-bold ${p.cholesterol > 200 ? 'text-error' : 'text-primary'}`}>
+                                <td className={`px-4 py-3 text-center font-bold ${
+                                    p.cholesterol > 200 ? 'text-error' : 'text-primary'
+                                }`}>
                                     {p.cholesterol || '--'}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-on-surface border-l border-outline-variant/5">
+                                    <button onClick={() => onEdit(p._id)} className="text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                                    </button>
                                 </td>
                             </tr>
                         ))}

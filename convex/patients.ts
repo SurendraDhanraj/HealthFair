@@ -36,6 +36,12 @@ export const updatePatient = mutation({
   args: {
     id: v.id("patients"),
     updates: v.object({
+        firstName: v.optional(v.string()),
+        surname: v.optional(v.string()),
+        dob: v.optional(v.string()),
+        gender: v.optional(v.string()),
+        phone: v.optional(v.string()),
+        email: v.optional(v.string()),
         height: v.optional(v.number()),
         weight: v.optional(v.number()),
         bmi: v.optional(v.number()),
