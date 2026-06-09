@@ -75,7 +75,8 @@ export function Dashboard() {
             </main>
 
             {editingPatientId && (
-                <EditPatientModal 
+                <EditPatientModal
+                    key={editingPatientId}
                     patient={patients.find(p => p._id === editingPatientId)} 
                     onClose={() => setEditingPatientId(null)} 
                 />

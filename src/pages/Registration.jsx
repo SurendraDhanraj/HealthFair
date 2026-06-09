@@ -1,12 +1,55 @@
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useState, useRef, useEffect } from "react";
 
 export function Registration() {
-    const addPatient = useMutation(api?.patients?.addPatient || "patients:addPatient");
-    const navigate = useNavigate();
-    const { register, handleSubmit } = useForm();
+    const addPatient   = useMutation(api?.patients?.addPatient || "patients:addPatient");
+    const participants = useQuery(api.patients.getParticipants) || [];
+    const navigate     = useNavigate();
+    const { register, handleSubmit, setValue, reset } = useForm();
+
+    const [search, setSearch]     = useState("");
+    const [showDrop, setShowDrop] = useState(false);
+    const [selected, setSelected] = useState(null);
+    const searchRef               = useRef(null);
+
+    // Live-filter participants by name
+    const q = search.trim().toLowerCase();
+    const matches = q.length >= 2
+        ? participants.filter(p =>
+            `${p.firstName} ${p.surname}`.toLowerCase().includes(q) ||
+            `${p.surname} ${p.firstName}`.toLowerCase().includes(q)
+          )
+        : [];
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) setShowDrop(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    const handleSelect = (p) => {
+        setSelected(p);
+        setSearch(`${p.firstName} ${p.surname}`);
+        setShowDrop(false);
+        setValue("firstName",    p.firstName    || "");
+        setValue("surname",      p.surname      || "");
+        setValue("dob",          p.dob          || "");
+        setValue("gender",       (p.gender      || "").toLowerCase());
+        setValue("email",        p.email        || "");
+        setValue("businessUnit", p.businessUnit || "");
+    };
+
+    const handleClear = () => {
+        setSelected(null);
+        setSearch("");
+        reset();
+    };
 
     const onSubmit = async (data) => {
         try {
@@ -48,6 +91,79 @@ export function Registration() {
                     <h2 className="text-3xl font-extrabold text-on-surface tracking-tight mb-2">Registration Station</h2>
                     <p className="text-on-surface-variant leading-relaxed">Initialize the visitor journey by capturing essential demographic and contact information.</p>
                 </div>
+
+                {/* Participant lookup */}
+                <div ref={searchRef} className="mb-6 relative">
+                    <label className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">manage_search</span>
+                        Search Participant Registry
+                    </label>
+                    <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={e => { setSearch(e.target.value); setShowDrop(true); setSelected(null); }}
+                            onFocus={() => q.length >= 2 && setShowDrop(true)}
+                            placeholder="Type a name to find a pre-registered participant..."
+                            className="w-full h-12 pl-10 pr-10 rounded-xl border-2 border-outline-variant bg-white focus:border-primary focus:ring-0 outline-none transition-all text-sm font-medium shadow-sm"
+                        />
+                        {search && (
+                            <button type="button" onClick={handleClear} className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-error transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Dropdown results */}
+                    {showDrop && matches.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white rounded-xl border border-outline-variant/30 shadow-xl overflow-hidden">
+                            <div className="px-4 py-2 border-b border-outline-variant/10 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-[16px]">group</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{matches.length} participant{matches.length !== 1 ? 's' : ''} found</span>
+                            </div>
+                            {matches.map((p, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => handleSelect(p)}
+                                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-primary/5 transition-colors border-b border-outline-variant/5 last:border-0 text-left"
+                                >
+                                    <div>
+                                        <p className="font-bold text-sm text-on-surface">{p.firstName} {p.surname}</p>
+                                        <p className="text-xs text-on-surface-variant mt-0.5">
+                                            {p.businessUnit && <span className="font-semibold text-primary">{p.businessUnit}</span>}
+                                            {p.businessUnit && (p.dob || p.gender) ? ' · ' : ''}
+                                            {p.dob ? `DOB: ${p.dob}` : ''}
+                                            {p.dob && p.gender ? ' · ' : ''}
+                                            {p.gender || ''}
+                                        </p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-primary/50 text-[18px]">arrow_forward</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* No results hint */}
+                    {showDrop && q.length >= 2 && matches.length === 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white rounded-xl border border-outline-variant/30 shadow-xl px-4 py-4 text-sm text-on-surface-variant text-center">
+                            No participants found for "<span className="font-semibold">{search}</span>" — fill in manually below.
+                        </div>
+                    )}
+                </div>
+
+                {/* Selected participant banner */}
+                {selected && (
+                    <div className="mb-6 flex items-center gap-3 bg-primary/[0.08] border border-primary/20 px-4 py-3 rounded-xl">
+                        <span className="material-symbols-outlined text-primary text-[22px]" style={{fontVariationSettings: "'FILL' 1"}}>verified_user</span>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold text-on-surface">Fields pre-filled from participant registry</p>
+                            <p className="text-xs text-on-surface-variant">You can still edit any field before registering.</p>
+                        </div>
+                        <button type="button" onClick={handleClear} className="text-xs font-bold text-primary hover:underline">Clear</button>
+                    </div>
+                )}
                 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="bg-white rounded-lg p-6 border border-outline-variant/30 shadow-sm">
@@ -58,21 +174,15 @@ export function Registration() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-on-surface-variant">First Name</label>
-                                <div className="relative group">
-                                    <input {...register("firstName")} required className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="John" type="text"/>
-                                </div>
+                                <input {...register("firstName")} required className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="John" type="text"/>
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-on-surface-variant">Surname</label>
-                                <div className="relative group">
-                                    <input {...register("surname")} required className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="Doe" type="text"/>
-                                </div>
+                                <input {...register("surname")} required className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="Doe" type="text"/>
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-on-surface-variant">Date of Birth</label>
-                                <div className="relative group">
-                                    <input {...register("dob")} required className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" type="date"/>
-                                </div>
+                                <input {...register("dob")} required className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" type="date"/>
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-on-surface-variant">Gender</label>
@@ -113,6 +223,10 @@ export function Registration() {
                                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">mail</span>
                                     <input {...register("email")} className="w-full h-11 pl-10 pr-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="john.doe@example.com" type="email"/>
                                 </div>
+                            </div>
+                            <div className="space-y-1.5 md:col-span-2">
+                                <label className="text-sm font-semibold text-on-surface-variant">Business Unit</label>
+                                <input {...register("businessUnit")} className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="e.g. Finance, HR, Operations" type="text"/>
                             </div>
                         </div>
                     </div>

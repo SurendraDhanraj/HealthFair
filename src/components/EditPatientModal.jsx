@@ -3,6 +3,21 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
+// Normalize any date string to YYYY-MM-DD for HTML date inputs
+function normalizeDob(dob) {
+    if (!dob) return "";
+    // Already YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dob)) return dob;
+    // Try native Date parsing (handles ISO strings, MM/DD/YYYY, etc.)
+    const d = new Date(dob);
+    if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+    }
+    return "";
+}
+
+
+
 export function EditPatientModal({ patient, onClose }) {
     const updatePatient = useMutation(api.patients.updatePatient);
     const deletePatient = useMutation(api.patients.deletePatient);
@@ -15,41 +30,46 @@ export function EditPatientModal({ patient, onClose }) {
         ...allPatients.map(p  => p.businessUnit),
     ].filter(Boolean))].sort();
     
-    const { register, handleSubmit, reset } = useForm({
+    const { register, handleSubmit, reset, setValue, watch } = useForm({
         defaultValues: {
-            firstName: patient?.firstName || "",
-            surname: patient?.surname || "",
-            dob: patient?.dob || "",
-            gender: patient?.gender || "male",
-            phone: patient?.phone || "",
-            email: patient?.email || "",
+            firstName:    patient?.firstName    || "",
+            surname:      patient?.surname      || "",
+            dob:          normalizeDob(patient?.dob),
+            gender:       (patient?.gender      || "male").toLowerCase(),
+            phone:        patient?.phone        || "",
+            email:        patient?.email        || "",
             businessUnit: patient?.businessUnit || "",
-            height: patient?.height || "",
-            weight: patient?.weight || "",
-            bpSystolic: patient?.bpSystolic || "",
-            bpDiastolic: patient?.bpDiastolic || "",
-            pulse: patient?.pulse || "",
-            bloodSugar: patient?.bloodSugar || "",
-            cholesterol: patient?.cholesterol || "",
+            height:       patient?.height       || "",
+            weight:       patient?.weight       || "",
+            bpSystolic:   patient?.bpSystolic   || "",
+            bpDiastolic:  patient?.bpDiastolic  || "",
+            pulse:        patient?.pulse        || "",
+            bloodSugar:   patient?.bloodSugar   || "",
+            cholesterol:  patient?.cholesterol  || "",
         }
     });
 
+    const watchedDob = watch("dob");
+
     useEffect(() => {
-        // Reset form values if the selected patient changes
-        if (patient) {
-            reset({
-                ...patient,
-                businessUnit: patient.businessUnit || "",
-                height: patient.height || "",
-                weight: patient.weight || "",
-                bpSystolic: patient.bpSystolic || "",
-                bpDiastolic: patient.bpDiastolic || "",
-                pulse: patient.pulse || "",
-                bloodSugar: patient.bloodSugar || "",
-                cholesterol: patient.cholesterol || ""
-            });
-        }
-    }, [patient, reset]);
+        if (!patient) return;
+        // Use setValue per field — more reliable than reset() for native
+        // date inputs and radio buttons across React versions
+        setValue("firstName",    patient.firstName    || "");
+        setValue("surname",      patient.surname      || "");
+        setValue("dob",          normalizeDob(patient.dob));
+        setValue("gender",       (patient.gender      || "male").toLowerCase());
+        setValue("phone",        patient.phone        || "");
+        setValue("email",        patient.email        || "");
+        setValue("businessUnit", patient.businessUnit || "");
+        setValue("height",       patient.height       || "");
+        setValue("weight",       patient.weight       || "");
+        setValue("bpSystolic",   patient.bpSystolic   || "");
+        setValue("bpDiastolic",  patient.bpDiastolic  || "");
+        setValue("pulse",        patient.pulse        || "");
+        setValue("bloodSugar",   patient.bloodSugar   || "");
+        setValue("cholesterol",  patient.cholesterol  || "");
+    }, [patient, setValue]);
 
     const onSubmit = async (data) => {
         try {
@@ -133,7 +153,13 @@ export function EditPatientModal({ patient, onClose }) {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">DoB</label>
-                                <input type="date" {...register("dob")} required className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface focus:ring-1 focus:ring-primary/20 focus:border-primary text-sm font-medium" />
+                                <input
+                                    type="date"
+                                    value={watchedDob || ""}
+                                    onChange={e => setValue("dob", e.target.value, { shouldValidate: true })}
+                                    required
+                                    className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface focus:ring-1 focus:ring-primary/20 focus:border-primary text-sm font-medium"
+                                />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Gender</label>
