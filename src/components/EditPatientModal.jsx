@@ -1,11 +1,19 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export function EditPatientModal({ patient, onClose }) {
     const updatePatient = useMutation(api.patients.updatePatient);
     const deletePatient = useMutation(api.patients.deletePatient);
+    const allPatients    = useQuery(api.patients.getPatients)    || [];
+    const participants   = useQuery(api.patients.getParticipants) || [];
+
+    // Derive sorted unique Business Unit options from both sources
+    const businessUnits = [...new Set([
+        ...participants.map(p => p.businessUnit),
+        ...allPatients.map(p  => p.businessUnit),
+    ].filter(Boolean))].sort();
     
     const { register, handleSubmit, reset } = useForm({
         defaultValues: {
@@ -15,6 +23,7 @@ export function EditPatientModal({ patient, onClose }) {
             gender: patient?.gender || "male",
             phone: patient?.phone || "",
             email: patient?.email || "",
+            businessUnit: patient?.businessUnit || "",
             height: patient?.height || "",
             weight: patient?.weight || "",
             bpSystolic: patient?.bpSystolic || "",
@@ -30,6 +39,7 @@ export function EditPatientModal({ patient, onClose }) {
         if (patient) {
             reset({
                 ...patient,
+                businessUnit: patient.businessUnit || "",
                 height: patient.height || "",
                 weight: patient.weight || "",
                 bpSystolic: patient.bpSystolic || "",
@@ -51,6 +61,7 @@ export function EditPatientModal({ patient, onClose }) {
                 gender: data.gender,
                 phone: data.phone,
                 email: data.email,
+                businessUnit: data.businessUnit || undefined,
             };
 
             const numericFields = ['height', 'weight', 'bpSystolic', 'bpDiastolic', 'pulse', 'bloodSugar', 'cholesterol'];
@@ -139,6 +150,26 @@ export function EditPatientModal({ patient, onClose }) {
                             <div>
                                 <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Email</label>
                                 <input {...register("email")} type="email" className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface focus:ring-1 focus:ring-primary/20 focus:border-primary text-sm font-medium" />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Business Unit</label>
+                                {businessUnits.length > 0 ? (
+                                    <select
+                                        {...register("businessUnit")}
+                                        className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface focus:ring-1 focus:ring-primary/20 focus:border-primary text-sm font-medium"
+                                    >
+                                        <option value="">— No Business Unit —</option>
+                                        {businessUnits.map(unit => (
+                                            <option key={unit} value={unit}>{unit}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                        {...register("businessUnit")}
+                                        placeholder="e.g. Finance, HR, Operations"
+                                        className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface focus:ring-1 focus:ring-primary/20 focus:border-primary text-sm font-medium"
+                                    />
+                                )}
                             </div>
                         </div>
                     </section>

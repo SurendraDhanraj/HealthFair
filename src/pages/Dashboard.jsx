@@ -1,14 +1,18 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { EditPatientModal } from "../components/EditPatientModal";
+import { ParticipantsView } from "./ParticipantsView";
 
 export function Dashboard() {
     const patients = useQuery(api.patients.getPatients) || [];
+    const participants = useQuery(api.patients.getParticipants) || [];
     const updatePatient = useMutation(api?.patients?.updatePatient || "patients:updatePatient");
+    const addPatient = useMutation(api.patients.addPatient);
     const [activeTab, setActiveTab] = useState('waitlist');
     const [editingPatientId, setEditingPatientId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleComplete = async (id) => {
         try {
@@ -30,6 +34,7 @@ export function Dashboard() {
                         <button onClick={() => setActiveTab('waitlist')} className={`font-bold py-1 border-b-2 transition-all whitespace-nowrap text-xs sm:text-sm md:text-base ${activeTab === 'waitlist' ? 'text-blue-700 dark:text-blue-400 border-blue-600 px-2' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 rounded-lg'}`}>Waitlist</button>
                         <button onClick={() => setActiveTab('completed')} className={`font-bold py-1 border-b-2 transition-all whitespace-nowrap text-xs sm:text-sm md:text-base ${activeTab === 'completed' ? 'text-blue-700 dark:text-blue-400 border-blue-600 px-2' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 rounded-lg'}`}>Completed</button>
                         <button onClick={() => setActiveTab('analytics')} className={`font-bold py-1 border-b-2 transition-all whitespace-nowrap text-xs sm:text-sm md:text-base ${activeTab === 'analytics' ? 'text-blue-700 dark:text-blue-400 border-blue-600 px-2' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 rounded-lg'}`}>Analytics</button>
+                        <button onClick={() => setActiveTab('participants')} className={`font-bold py-1 border-b-2 transition-all whitespace-nowrap text-xs sm:text-sm md:text-base ${activeTab === 'participants' ? 'text-blue-700 dark:text-blue-400 border-blue-600 px-2' : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 rounded-lg'}`}>Participants</button>
                     </div>
                     <div className="flex items-center gap-4">
                         <button className="material-symbols-outlined text-on-surface-variant hover:bg-blue-50 p-2 rounded-full transition-colors">notifications</button>
@@ -42,25 +47,31 @@ export function Dashboard() {
             </nav>
 
             <main className="pt-24 pb-24 px-6 max-w-7xl mx-auto">
+                {activeTab !== 'participants' && (
                 <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-12">
                     <div className="relative w-full md:max-w-md group">
                         <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
-                        <input className="w-full bg-surface-container-high border-none border-b-2 border-transparent focus:ring-0 focus:border-primary rounded-t-xl py-4 pl-12 pr-4 font-body text-on-surface placeholder:text-on-surface-variant/60 transition-all" placeholder="Search patients by name or ID..." type="text"/>
+                        <input
+                            className="w-full bg-surface-container-high border-none border-b-2 border-transparent focus:ring-0 focus:border-primary rounded-t-xl py-4 pl-12 pr-4 font-body text-on-surface placeholder:text-on-surface-variant/60 transition-all"
+                            placeholder="Search by name to find a participant or returning visitor..."
+                            type="text"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                        />
                     </div>
                     <div className="flex gap-4 w-full md:w-auto">
                         <Link to="/registration" className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-primary-container text-on-primary font-semibold px-8 py-4 rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-transform text-center mx-auto whitespace-nowrap">
                             <span className="material-symbols-outlined text-white">person_add</span>
                             <span className="text-white">New Intake</span>
                         </Link>
-                        <button className="md:flex-none p-4 rounded-full bg-surface-container-lowest text-primary border border-outline-variant/20 shadow-sm active:scale-95 transition-transform">
-                            <span className="material-symbols-outlined">filter_list</span>
-                        </button>
                     </div>
                 </div>
+                )}
 
-                {activeTab === 'waitlist' && <WaitlistView patients={patients} handleComplete={handleComplete} onEdit={setEditingPatientId} />}
+                {activeTab === 'waitlist' && <WaitlistView patients={patients} participants={participants} handleComplete={handleComplete} onEdit={setEditingPatientId} searchQuery={searchQuery} setSearchQuery={setSearchQuery} addPatient={addPatient} />}
                 {activeTab === 'completed' && <CompletedView patients={patients} onEdit={setEditingPatientId} />}
                 {activeTab === 'analytics' && <AnalyticsView patients={patients} onEdit={setEditingPatientId} />}
+                {activeTab === 'participants' && <ParticipantsView />}
             </main>
 
             {editingPatientId && (
@@ -96,9 +107,83 @@ function StationRow({name, isDone, path, patientId}) {
     );
 }
 
-function WaitlistView({ patients, handleComplete, onEdit }) {
+function WaitlistView({ patients, participants, handleComplete, onEdit, searchQuery, setSearchQuery, addPatient }) {
     const waitlist = patients.filter(p => p.status !== 'finalized');
-    
+    const [addingId, setAddingId] = useState(null);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef(null);
+
+    const q = searchQuery.trim().toLowerCase();
+
+    // Filter active waitlist cards
+    const filteredWaitlist = q
+        ? waitlist.filter(p =>
+            `${p.firstName} ${p.surname}`.toLowerCase().includes(q) ||
+            p._id.slice(-5).toLowerCase().includes(q)
+          )
+        : waitlist;
+
+    // Search participants registry first, then fall back to past patient visits
+    // Deduplicate by full name so each person appears once
+    const seen = new Set();
+    const visitCandidates = q.length >= 2
+        ? [
+            // Participants from the registry (preferred source)
+            ...participants
+                .filter(p => `${p.firstName} ${p.surname}`.toLowerCase().includes(q))
+                .map(p => ({ ...p, _source: 'registry' })),
+            // Past patients not already in registry results
+            ...patients
+                .filter(p => `${p.firstName} ${p.surname}`.toLowerCase().includes(q))
+                .map(p => ({ ...p, _source: 'history' })),
+          ].filter(p => {
+              const key = `${p.firstName.toLowerCase()} ${p.surname.toLowerCase()}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+          })
+        : [];
+
+    // IDs of people already on today's active waitlist (to flag them)
+    const today = new Date().toLocaleDateString('en-CA');
+    const alreadyTodayNames = new Set(
+        waitlist
+            .filter(p => new Date(p._creationTime).toLocaleDateString('en-CA') === today)
+            .map(p => `${p.firstName.toLowerCase()} ${p.surname.toLowerCase()}`)
+    );
+
+    const handleNewVisit = async (p) => {
+        setAddingId(p._id || p.surname + p.firstName);
+        try {
+            await addPatient({
+                firstName: p.firstName,
+                surname: p.surname,
+                dob: p.dob || '',
+                gender: p.gender || '',
+                phone: p.phone || '',
+                email: p.email || '',
+                businessUnit: p.businessUnit || undefined,
+            });
+            setSearchQuery('');
+            setShowDropdown(false);
+        } catch(e) {
+            console.error(e);
+        } finally {
+            setAddingId(null);
+        }
+    };
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
     return (
         <>
             <div className="mb-8">
@@ -106,8 +191,62 @@ function WaitlistView({ patients, handleComplete, onEdit }) {
                 <p className="text-on-surface-variant font-body mt-2">Managing {waitlist.length} patients across triage stations</p>
             </div>
 
+            {/* Participant / returning visitor search results */}
+            {visitCandidates.length > 0 && (
+                <div ref={searchRef} className="mb-6 bg-surface-container-low border border-outline-variant/20 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="px-5 py-3 border-b border-outline-variant/10 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-[18px]">manage_search</span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Add to Today's Waitlist</span>
+                    </div>
+                    {visitCandidates.map(p => {
+                        const nameKey = `${p.firstName.toLowerCase()} ${p.surname.toLowerCase()}`;
+                        const alreadyIn = alreadyTodayNames.has(nameKey);
+                        const uid = p._id || (p.surname + p.firstName);
+                        return (
+                            <div key={uid} className="flex items-center justify-between px-5 py-3.5 hover:bg-surface-container transition-colors border-b border-outline-variant/5 last:border-0">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-bold text-sm text-on-surface">{p.firstName} {p.surname}</p>
+                                        {p._source === 'registry' && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">Registered</span>
+                                        )}
+                                        {alreadyIn && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-secondary/10 text-secondary">On waitlist</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-on-surface-variant mt-0.5">
+                                        {p.businessUnit ? <span className="font-semibold">{p.businessUnit}</span> : ''}
+                                        {p.businessUnit && p.dob ? ' · ' : ''}
+                                        {p.dob ? `DOB: ${p.dob}` : ''}
+                                        {(p.businessUnit || p.dob) && p.gender ? ' · ' : ''}
+                                        {p.gender || ''}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleNewVisit(p)}
+                                    disabled={addingId === uid}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">
+                                        {addingId === uid ? 'hourglass_top' : 'add_circle'}
+                                    </span>
+                                    {addingId === uid ? 'Adding...' : 'New Visit'}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {waitlist.map(p => {
+                {filteredWaitlist.length === 0 && q && (
+                    <div className="col-span-full py-16 flex flex-col items-center justify-center text-center opacity-60">
+                        <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-3" style={{fontVariationSettings: "'wght' 200"}}>search_off</span>
+                        <p className="font-bold text-on-surface">No active patients match "{searchQuery}"</p>
+                        <p className="text-sm text-on-surface-variant mt-1">Found a match above? Click <strong>New Visit</strong> to add them to today's triage.</p>
+                    </div>
+                )}
+                {filteredWaitlist.map(p => {
                     const hasVitals = p.height && p.weight;
                     const hasBP = p.bpSystolic && p.pulse;
                     const hasLabs = (p.bloodSugar !== undefined || p.bloodSugarNotTested) && (p.cholesterol !== undefined || p.cholesterolNotTested);
@@ -122,7 +261,13 @@ function WaitlistView({ patients, handleComplete, onEdit }) {
                                 <div>
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">ID: #{p._id.slice(-5).toUpperCase()}</span>
                                     <h3 className="font-headline text-xl font-bold mt-2 text-on-surface">{p.firstName} {p.surname}</h3>
-                                    <p className="text-sm text-on-surface-variant">Arrival: {new Date(p._creationTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                    {p.businessUnit && (
+                                        <span className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                            <span className="material-symbols-outlined text-[12px]">corporate_fare</span>
+                                            {p.businessUnit}
+                                        </span>
+                                    )}
+                                    <p className="text-sm text-on-surface-variant mt-1">Arrival: {new Date(p._creationTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${isCompleted ? 'bg-secondary-container text-on-secondary-container' : 'bg-tertiary-fixed text-on-tertiary-fixed'}`}>
@@ -358,11 +503,12 @@ function AnalyticsTable({ patients, onEdit }) {
     const sortedPatients = [...patients].sort((a, b) => b._creationTime - a._creationTime);
 
     const exportToCSV = () => {
-        const headers = ["Time", "First Name", "Surname", "Gender", "DOB", "Email", "Height", "Weight", "BMI", "BP Systolic", "BP Diastolic", "Blood Sugar", "Cholesterol"];
+        const headers = ["Time", "First Name", "Surname", "Business Unit", "Gender", "DOB", "Email", "Height", "Weight", "BMI", "BP Systolic", "BP Diastolic", "Blood Sugar", "Cholesterol"];
         const rows = sortedPatients.map(p => [
             new Date(p._creationTime).toLocaleString(),
             p.firstName,
             p.surname,
+            p.businessUnit || "",
             p.gender,
             p.dob || "",
             p.email || "",
@@ -413,6 +559,7 @@ function AnalyticsTable({ patients, onEdit }) {
                         <tr className="bg-surface-container-high/40 text-on-surface-variant uppercase text-[10px] font-bold tracking-widest">
                             <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider rounded-tl-lg">Arrival Time</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Name</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Business Unit</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Gender</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Height (cm)</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-on-surface-variant uppercase tracking-wider">Weight (kg)</th>
@@ -430,6 +577,11 @@ function AnalyticsTable({ patients, onEdit }) {
                                     {new Date(p._creationTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </td>
                                 <td className="px-4 py-3 font-extrabold text-blue-800 dark:text-blue-300 tracking-tight">{p.firstName} {p.surname}</td>
+                                <td className="px-4 py-3">
+                                    {p.businessUnit
+                                        ? <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold whitespace-nowrap">{p.businessUnit}</span>
+                                        : <span className="text-on-surface-variant/40 text-xs">—</span>}
+                                </td>
                                 <td className="px-4 py-3 text-center capitalize text-xs font-bold text-on-surface-variant">{p.gender}</td>
                                 <td className="px-4 py-3 text-center font-mono text-xs">{p.height || '--'}</td>
                                 <td className="px-4 py-3 text-center font-mono text-xs">{p.weight || '--'}</td>

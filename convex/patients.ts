@@ -23,6 +23,7 @@ export const addPatient = mutation({
     gender: v.string(),
     phone: v.string(),
     email: v.string(),
+    businessUnit: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("patients", {
@@ -42,6 +43,7 @@ export const updatePatient = mutation({
         gender: v.optional(v.string()),
         phone: v.optional(v.string()),
         email: v.optional(v.string()),
+        businessUnit: v.optional(v.string()),
         height: v.optional(v.number()),
         weight: v.optional(v.number()),
         bmi: v.optional(v.number()),
@@ -85,5 +87,44 @@ export const getReportUrl = query({
   args: { storageId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
+// ── Participant Registry ─────────────────────────────────────────────────────
+
+export const getParticipants = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("participants").collect();
+  },
+});
+
+export const bulkAddParticipants = mutation({
+  args: {
+    participants: v.array(v.object({
+      surname: v.string(),
+      firstName: v.string(),
+      businessUnit: v.optional(v.string()),
+      gender: v.optional(v.string()),
+      dob: v.optional(v.string()),
+      email: v.optional(v.string()),
+    })),
+  },
+  handler: async (ctx, args) => {
+    for (const p of args.participants) {
+      await ctx.db.insert("participants", p);
+    }
+    return args.participants.length;
+  },
+});
+
+export const clearParticipants = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("participants").collect();
+    for (const p of all) {
+      await ctx.db.delete(p._id);
+    }
+    return all.length;
   },
 });

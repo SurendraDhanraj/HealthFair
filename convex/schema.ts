@@ -9,6 +9,7 @@ export default defineSchema({
     gender: v.string(),
     phone: v.string(),
     email: v.string(),
+    businessUnit: v.optional(v.string()),
     height: v.optional(v.number()),
     weight: v.optional(v.number()),
     bmi: v.optional(v.number()),
@@ -22,4 +23,13 @@ export default defineSchema({
     status: v.string(),
     reportFileId: v.optional(v.string()),
   }),
+
+  participants: defineTable({
+    surname: v.string(),
+    firstName: v.string(),
+    businessUnit: v.optional(v.string()),
+    gender: v.optional(v.string()),
+    dob: v.optional(v.string()),
+    email: v.optional(v.string()),
+  }).index("by_surname", ["surname"]),
 });
