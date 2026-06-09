@@ -50,6 +50,8 @@ export const updatePatient = mutation({
         pulse: v.optional(v.number()),
         bloodSugar: v.optional(v.number()),
         cholesterol: v.optional(v.number()),
+        bloodSugarNotTested: v.optional(v.boolean()),
+        cholesterolNotTested: v.optional(v.boolean()),
         status: v.optional(v.string()),
     })
   },

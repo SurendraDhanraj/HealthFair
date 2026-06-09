@@ -13,9 +13,9 @@ export function Report() {
     const generateUploadUrl = useMutation(api.patients.generateUploadUrl);
     const saveReportId = useMutation(api.patients.saveReportId);
     
-    // Get the report URL if it exists
+    // Get the report URL if it exists — guard against patient being undefined while data loads
     const reportUrl = useQuery(api.patients.getReportUrl, 
-        patient.reportFileId ? { storageId: patient.reportFileId } : "skip"
+        patient?.reportFileId ? { storageId: patient.reportFileId } : "skip"
     );
 
     useEffect(() => {
@@ -111,8 +111,8 @@ export function Report() {
     const isBPMOpt = patient.bpSystolic <= 120 && patient.bpDiastolic <= 80;
     const bpPercent = Math.min(100, Math.max(0, ((patient.bpSystolic || 120) - 90) / Math.max(1, 180 - 90) * 100));
 
-    const isSugarHigh = patient.bloodSugar > 140;
-    const isCholesterolHigh = patient.cholesterol > 200;
+    const isSugarHigh = !patient.bloodSugarNotTested && patient.bloodSugar > 140;
+    const isCholesterolHigh = !patient.cholesterolNotTested && patient.cholesterol > 200;
 
     let riskLevel = "Low Risk";
     if (isBPMHigh || isSugarHigh || isCholesterolHigh) riskLevel = "Elevated";
@@ -348,13 +348,21 @@ export function Report() {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Blood Sugar</p>
-                                    <h3 className="text-xl font-headline font-bold mt-0.5">{patient.bloodSugar} <span className="text-[10px] font-normal">mg/dL</span></h3>
+                                    {patient.bloodSugarNotTested ? (
+                                        <h3 className="text-xl font-headline font-bold mt-0.5 text-slate-500 italic">Not Tested</h3>
+                                    ) : (
+                                        <h3 className="text-xl font-headline font-bold mt-0.5">{patient.bloodSugar} <span className="text-[10px] font-normal">mg/dL</span></h3>
+                                    )}
                                 </div>
-                                <span className={`text-white text-[9px] px-2 py-0.5 rounded-full font-bold ${isSugarHigh ? 'bg-error' : 'bg-secondary'}`}>{isSugarHigh ? 'ELEVATED' : 'OPTIMAL'}</span>
+                                <span className={`text-white text-[9px] px-2 py-0.5 rounded-full font-bold ${patient.bloodSugarNotTested ? 'bg-slate-400' : (isSugarHigh ? 'bg-error' : 'bg-secondary')}`}>
+                                    {patient.bloodSugarNotTested ? 'NOT TESTED' : (isSugarHigh ? 'ELEVATED' : 'OPTIMAL')}
+                                </span>
                             </div>
                             <div className="space-y-1.5 relative">
-                                <div className="h-1.5 w-full rounded-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 opacity-80"></div>
-                                <div className="absolute top-[-5px] w-1 h-3.5 bg-slate-800 rounded-sm shadow-sm" style={{left: `${Math.min(100, Math.max(0, (patient.bloodSugar / 300) * 100))}%`}}></div>
+                                <div className={`h-1.5 w-full rounded-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 opacity-80 ${patient.bloodSugarNotTested ? 'opacity-30 grayscale' : ''}`}></div>
+                                {!patient.bloodSugarNotTested && patient.bloodSugar !== undefined && (
+                                    <div className="absolute top-[-5px] w-1 h-3.5 bg-slate-800 rounded-sm shadow-sm" style={{left: `${Math.min(100, Math.max(0, (patient.bloodSugar / 300) * 100))}%`}}></div>
+                                )}
                                 <div className="flex justify-between text-[9px] font-bold text-on-surface-variant tracking-widest uppercase">
                                     <span>Optimal</span>
                                     <span>Elevated</span>
@@ -367,13 +375,21 @@ export function Report() {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Total Cholesterol</p>
-                                    <h3 className="text-xl font-headline font-bold mt-0.5">{patient.cholesterol} <span className="text-[10px] font-normal">mg/dL</span></h3>
+                                    {patient.cholesterolNotTested ? (
+                                        <h3 className="text-xl font-headline font-bold mt-0.5 text-slate-500 italic">Not Tested</h3>
+                                    ) : (
+                                        <h3 className="text-xl font-headline font-bold mt-0.5">{patient.cholesterol} <span className="text-[10px] font-normal">mg/dL</span></h3>
+                                    )}
                                 </div>
-                                <span className={`text-white text-[9px] px-2 py-0.5 rounded-full font-bold ${isCholesterolHigh ? 'bg-tertiary-container' : 'bg-secondary'}`}>{isCholesterolHigh ? 'HIGH RISK' : 'DESIRED'}</span>
+                                <span className={`text-white text-[9px] px-2 py-0.5 rounded-full font-bold ${patient.cholesterolNotTested ? 'bg-slate-400' : (isCholesterolHigh ? 'bg-tertiary-container' : 'bg-secondary')}`}>
+                                    {patient.cholesterolNotTested ? 'NOT TESTED' : (isCholesterolHigh ? 'HIGH RISK' : 'DESIRED')}
+                                </span>
                             </div>
                             <div className="space-y-1.5 relative">
-                                <div className="h-1.5 w-full rounded-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 opacity-80"></div>
-                                <div className="absolute top-[-5px] w-1 h-3.5 bg-slate-800 rounded-sm shadow-sm" style={{left: `${Math.min(100, Math.max(0, (patient.cholesterol / 400) * 100))}%`}}></div>
+                                <div className={`h-1.5 w-full rounded-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 opacity-80 ${patient.cholesterolNotTested ? 'opacity-30 grayscale' : ''}`}></div>
+                                {!patient.cholesterolNotTested && patient.cholesterol !== undefined && (
+                                    <div className="absolute top-[-5px] w-1 h-3.5 bg-slate-800 rounded-sm shadow-sm" style={{left: `${Math.min(100, Math.max(0, (patient.cholesterol / 400) * 100))}%`}}></div>
+                                )}
                                 <div className="flex justify-between text-[9px] font-bold text-on-surface-variant tracking-widest uppercase">
                                     <span>Desired</span>
                                     <span>Borderline</span>

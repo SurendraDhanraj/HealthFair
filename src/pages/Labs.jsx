@@ -12,20 +12,52 @@ export function Labs() {
     const [selectedId, setSelectedId] = useState(location.state?.patientId || "");
     const [bloodSugar, setBloodSugar] = useState("");
     const [cholesterol, setCholesterol] = useState("");
+    const [sugarNotTested, setSugarNotTested] = useState(false);
+    const [cholesterolNotTested, setCholesterolNotTested] = useState(false);
+    const [initializedId, setInitializedId] = useState("");
 
     const patient = patients.find(p => p._id === selectedId);
+
+    if (selectedId !== initializedId && (patient || !selectedId || patients.length > 0)) {
+        setInitializedId(selectedId);
+        if (patient) {
+            setBloodSugar(patient.bloodSugar ? patient.bloodSugar.toString() : "");
+            setSugarNotTested(!!patient.bloodSugarNotTested);
+            setCholesterol(patient.cholesterol ? patient.cholesterol.toString() : "");
+            setCholesterolNotTested(!!patient.cholesterolNotTested);
+        } else {
+            setBloodSugar("");
+            setSugarNotTested(false);
+            setCholesterol("");
+            setCholesterolNotTested(false);
+        }
+    }
 
     const handleSave = async () => {
         if (!selectedId) return;
         try {
+            const updates = { status: "completed" };
+            
+            if (sugarNotTested) {
+                updates.bloodSugar = undefined;
+                updates.bloodSugarNotTested = true;
+            } else {
+                updates.bloodSugar = bloodSugar !== "" ? parseFloat(bloodSugar) : undefined;
+                updates.bloodSugarNotTested = false;
+            }
+
+            if (cholesterolNotTested) {
+                updates.cholesterol = undefined;
+                updates.cholesterolNotTested = true;
+            } else {
+                updates.cholesterol = cholesterol !== "" ? parseFloat(cholesterol) : undefined;
+                updates.cholesterolNotTested = false;
+            }
+
             if (api?.patients?.updatePatient) {
                 await updatePatient({ 
                     id: selectedId, 
-                    updates: { 
-                        bloodSugar: parseFloat(bloodSugar), 
-                        cholesterol: parseFloat(cholesterol),
-                        status: "completed"
-                    } 
+                    updates
                 });
             }
             navigate("/");
@@ -119,17 +151,38 @@ export function Labs() {
 
                             <div className="space-y-4">
                                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm group">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Random Blood Sugar</label>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex flex-col">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Random Blood Sugar</label>
+                                            <label className="flex items-center gap-2 cursor-pointer mt-2 select-none">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={sugarNotTested} 
+                                                    onChange={e => {
+                                                        setSugarNotTested(e.target.checked);
+                                                        if (e.target.checked) setBloodSugar("");
+                                                    }}
+                                                    className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 transition-colors"
+                                                />
+                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Not Tested</span>
+                                            </label>
+                                        </div>
                                         <span className="text-xs font-medium text-slate-400">mg/dL</span>
                                     </div>
                                     <div className="relative flex items-center mb-4">
-                                        <input value={bloodSugar} onChange={e=>setBloodSugar(e.target.value)} className="w-full bg-slate-50 border-0 border-b-2 border-slate-200 focus:border-primary focus:ring-0 rounded-t-lg px-4 py-4 text-2xl font-bold transition-all text-slate-900 placeholder:text-slate-300" placeholder="000" type="number"/>
-                                        <span className="material-symbols-outlined absolute right-4 text-slate-300 group-focus-within:text-primary">bloodtype</span>
+                                        <input 
+                                            value={bloodSugar} 
+                                            onChange={e=>setBloodSugar(e.target.value)} 
+                                            disabled={sugarNotTested}
+                                            className={`w-full bg-slate-50 border-0 border-b-2 border-slate-200 focus:border-primary focus:ring-0 rounded-t-lg px-4 py-4 text-2xl font-bold transition-all text-slate-900 placeholder:text-slate-300 ${sugarNotTested ? 'opacity-40 cursor-not-allowed' : ''}`} 
+                                            placeholder={sugarNotTested ? "N/A" : "000"} 
+                                            type="number"
+                                        />
+                                        <span className={`material-symbols-outlined absolute right-4 transition-colors ${sugarNotTested ? 'text-slate-300' : 'text-slate-300 group-focus-within:text-primary'}`}>bloodtype</span>
                                     </div>
                                     <div className="space-y-2 relative">
-                                        <div className="range-bar w-full"></div>
-                                        {bloodSugar && <div className="absolute top-[-4px] w-1.5 h-3.5 bg-slate-800 rounded outline outline-1 outline-white shadow-sm transition-all duration-300" style={{left: `${Math.min(100, Math.max(0, (bloodSugar / 300) * 100))}%`}}></div>}
+                                        <div className={`range-bar w-full transition-all ${sugarNotTested ? 'opacity-30 grayscale' : ''}`}></div>
+                                        {bloodSugar && !sugarNotTested && <div className="absolute top-[-4px] w-1.5 h-3.5 bg-slate-800 rounded outline outline-1 outline-white shadow-sm transition-all duration-300" style={{left: `${Math.min(100, Math.max(0, (bloodSugar / 300) * 100))}%`}}></div>}
                                         <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
                                             <span>Normal (&lt; 140)</span>
                                             <span>Elevated</span>
@@ -139,17 +192,38 @@ export function Labs() {
                                 </div>
 
                                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm group">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Cholesterol</label>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex flex-col">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Cholesterol</label>
+                                            <label className="flex items-center gap-2 cursor-pointer mt-2 select-none">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={cholesterolNotTested} 
+                                                    onChange={e => {
+                                                        setCholesterolNotTested(e.target.checked);
+                                                        if (e.target.checked) setCholesterol("");
+                                                    }}
+                                                    className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 transition-colors"
+                                                />
+                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Not Tested</span>
+                                            </label>
+                                        </div>
                                         <span className="text-xs font-medium text-slate-400">mg/dL</span>
                                     </div>
                                     <div className="relative flex items-center mb-4">
-                                        <input value={cholesterol} onChange={e=>setCholesterol(e.target.value)} className="w-full bg-slate-50 border-0 border-b-2 border-slate-200 focus:border-primary focus:ring-0 rounded-t-lg px-4 py-4 text-2xl font-bold transition-all text-slate-900 placeholder:text-slate-300" placeholder="000" type="number"/>
-                                        <span className="material-symbols-outlined absolute right-4 text-slate-300 group-focus-within:text-primary">monitor_heart</span>
+                                        <input 
+                                            value={cholesterol} 
+                                            onChange={e=>setCholesterol(e.target.value)} 
+                                            disabled={cholesterolNotTested}
+                                            className={`w-full bg-slate-50 border-0 border-b-2 border-slate-200 focus:border-primary focus:ring-0 rounded-t-lg px-4 py-4 text-2xl font-bold transition-all text-slate-900 placeholder:text-slate-300 ${cholesterolNotTested ? 'opacity-40 cursor-not-allowed' : ''}`} 
+                                            placeholder={cholesterolNotTested ? "N/A" : "000"} 
+                                            type="number"
+                                        />
+                                        <span className={`material-symbols-outlined absolute right-4 transition-colors ${cholesterolNotTested ? 'text-slate-300' : 'text-slate-300 group-focus-within:text-primary'}`}>monitor_heart</span>
                                     </div>
                                     <div className="space-y-2 relative">
-                                        <div className="range-bar-cholesterol w-full"></div>
-                                        {cholesterol && <div className="absolute top-[-4px] w-1.5 h-3.5 bg-slate-800 rounded outline outline-1 outline-white shadow-sm transition-all duration-300" style={{left: `${Math.min(100, Math.max(0, (cholesterol / 400) * 100))}%`}}></div>}
+                                        <div className={`range-bar-cholesterol w-full transition-all ${cholesterolNotTested ? 'opacity-30 grayscale' : ''}`}></div>
+                                        {cholesterol && !cholesterolNotTested && <div className="absolute top-[-4px] w-1.5 h-3.5 bg-slate-800 rounded outline outline-1 outline-white shadow-sm transition-all duration-300" style={{left: `${Math.min(100, Math.max(0, (cholesterol / 400) * 100))}%`}}></div>}
                                         <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
                                             <span>Desired (&lt; 200)</span>
                                             <span>Borderline</span>

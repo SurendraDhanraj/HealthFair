@@ -110,7 +110,7 @@ function WaitlistView({ patients, handleComplete, onEdit }) {
                 {waitlist.map(p => {
                     const hasVitals = p.height && p.weight;
                     const hasBP = p.bpSystolic && p.pulse;
-                    const hasLabs = p.bloodSugar && p.cholesterol;
+                    const hasLabs = (p.bloodSugar !== undefined || p.bloodSugarNotTested) && (p.cholesterol !== undefined || p.cholesterolNotTested);
                     const isCompleted = hasVitals && hasBP && hasLabs;
 
                     return (
@@ -154,56 +154,112 @@ function WaitlistView({ patients, handleComplete, onEdit }) {
 }
 
 function CompletedView({ patients, onEdit }) {
+    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+    const [dateFilter, setDateFilter] = useState(today);
+
     const finalized = patients.filter(p => p.status === 'finalized');
+    const filtered = dateFilter
+        ? finalized.filter(p => new Date(p._creationTime).toLocaleDateString('en-CA') === dateFilter)
+        : finalized;
+
     return (
         <>
-            <div className="mb-8">
-                <h2 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Completed Screenings</h2>
-                <p className="text-on-surface-variant font-body mt-2">Showing {finalized.length} finalized patient records</p>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {finalized.map(p => (
-                    <div key={p._id} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-[0_8px_32px_rgba(25,28,35,0.04)] hover:shadow-md transition-shadow flex flex-col justify-between relative">
-                        <button onClick={() => onEdit(p._id)} className="absolute top-4 right-4 p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors group z-10">
-                            <span className="material-symbols-outlined text-[20px]">edit</span>
-                        </button>
-                        <div>
-                            <div className="flex justify-between items-start mb-4 pr-8">
-                                <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">ID: #{p._id.slice(-5).toUpperCase()}</span>
-                                    <h3 className="font-headline text-xl font-bold mt-2 text-on-surface">{p.firstName} {p.surname}</h3>
-                                </div>
-                                <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 flex flex-col items-center justify-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px]">check_circle</span> Checked Out
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 mt-6">
-                                <div>
-                                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BP</span>
-                                    <p className="font-semibold text-sm">{p.bpSystolic}/{p.bpDiastolic}</p>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Sugar</span>
-                                    <p className="font-semibold text-sm">{p.bloodSugar}</p>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Cholesterol</span>
-                                    <p className="font-semibold text-sm">{p.cholesterol}</p>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BMI</span>
-                                    <p className="font-semibold text-sm">{p.bmi}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-6 pt-4 border-t border-outline-variant/10 flex gap-3">
-                            <Link to={`/report/${p._id}`} className="flex-1 bg-surface-container-high hover:bg-surface-variant text-on-surface font-bold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                                <span className="material-symbols-outlined text-[18px]">visibility</span> View Record
-                            </Link>
-                        </div>
+            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Completed Screenings</h2>
+                    <p className="text-on-surface-variant font-body mt-2">
+                        Showing <span className="font-bold text-on-surface">{filtered.length}</span> of {finalized.length} finalized records
+                    </p>
+                </div>
+                <div className="flex items-center gap-3 bg-surface-container-high px-4 py-3 rounded-2xl border border-outline-variant/10 shadow-sm self-start md:self-auto">
+                    <span className="material-symbols-outlined text-primary text-[20px]">calendar_today</span>
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Filter by Date</span>
+                        <input
+                            type="date"
+                            value={dateFilter}
+                            onChange={e => setDateFilter(e.target.value)}
+                            className="bg-transparent border-none ring-0 outline-none text-sm font-semibold text-on-surface focus:ring-0 p-0 cursor-pointer"
+                        />
                     </div>
-                ))}
+                    {dateFilter !== today && (
+                        <button
+                            onClick={() => setDateFilter(today)}
+                            title="Reset to today"
+                            className="ml-1 p-1 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">today</span>
+                        </button>
+                    )}
+                    {dateFilter && (
+                        <button
+                            onClick={() => setDateFilter('')}
+                            title="Show all dates"
+                            className="p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                    )}
+                </div>
             </div>
+
+            {filtered.length === 0 ? (
+                <div className="bg-surface-container-lowest border border-dashed border-outline-variant/30 rounded-3xl p-16 flex flex-col items-center justify-center text-center opacity-60">
+                    <span className="material-symbols-outlined text-6xl text-on-surface-variant/40 mb-4" style={{fontVariationSettings: "'wght' 200"}}>event_busy</span>
+                    <h3 className="text-xl font-headline font-bold text-on-surface">No records for this date</h3>
+                    <p className="max-w-xs text-sm text-on-surface-variant mt-2">
+                        No completed screenings were found for {dateFilter ? new Date(dateFilter + 'T12:00:00').toLocaleDateString([], {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}) : 'the selected period'}.
+                    </p>
+                    <button onClick={() => setDateFilter('')} className="mt-4 text-sm font-bold text-primary hover:underline">
+                        Show all dates
+                    </button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filtered.map(p => (
+                        <div key={p._id} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-[0_8px_32px_rgba(25,28,35,0.04)] hover:shadow-md transition-shadow flex flex-col justify-between relative">
+                            <button onClick={() => onEdit(p._id)} className="absolute top-4 right-4 p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors group z-10">
+                                <span className="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <div>
+                                <div className="flex justify-between items-start mb-4 pr-8">
+                                    <div>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">ID: #{p._id.slice(-5).toUpperCase()}</span>
+                                        <h3 className="font-headline text-xl font-bold mt-2 text-on-surface">{p.firstName} {p.surname}</h3>
+                                        <p className="text-xs text-on-surface-variant mt-0.5">{new Date(p._creationTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
+                                    </div>
+                                    <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 flex flex-col items-center justify-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">check_circle</span> Checked Out
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 mt-6">
+                                    <div>
+                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BP</span>
+                                        <p className="font-semibold text-sm">{p.bpSystolic}/{p.bpDiastolic}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Sugar</span>
+                                        <p className="font-semibold text-sm">{p.bloodSugarNotTested ? 'Not Tested' : p.bloodSugar}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Cholesterol</span>
+                                        <p className="font-semibold text-sm">{p.cholesterolNotTested ? 'Not Tested' : p.cholesterol}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">BMI</span>
+                                        <p className="font-semibold text-sm">{p.bmi}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-6 pt-4 border-t border-outline-variant/10 flex gap-3">
+                                <Link to={`/report/${p._id}`} className="flex-1 bg-surface-container-high hover:bg-surface-variant text-on-surface font-bold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                                    <span className="material-symbols-outlined text-[18px]">visibility</span> View Record
+                                </Link>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </>
     );
 }
@@ -315,8 +371,8 @@ function AnalyticsTable({ patients, onEdit }) {
             p.bmi || "",
             p.bpSystolic || "",
             p.bpDiastolic || "",
-            p.bloodSugar || "",
-            p.cholesterol || ""
+            p.bloodSugarNotTested ? "Not Tested" : (p.bloodSugar || ""),
+            p.cholesterolNotTested ? "Not Tested" : (p.cholesterol || "")
         ]);
 
         const csvContent = [headers, ...rows].map(e => e.map(val => `"${val}"`).join(",")).join("\n");
@@ -388,12 +444,12 @@ function AnalyticsTable({ patients, onEdit }) {
                                     </span>
                                 </td>
                                 <td className={`px-4 py-3 text-center font-bold ${p.bloodSugar > 140 ? 'text-error' : 'text-primary'}`}>
-                                    {p.bloodSugar || '--'}
+                                    {p.bloodSugarNotTested ? <span className="text-slate-400 font-normal italic">Not Tested</span> : (p.bloodSugar || '--')}
                                 </td>
                                 <td className={`px-4 py-3 text-center font-bold ${
                                     p.cholesterol > 200 ? 'text-error' : 'text-primary'
                                 }`}>
-                                    {p.cholesterol || '--'}
+                                    {p.cholesterolNotTested ? <span className="text-slate-400 font-normal italic">Not Tested</span> : (p.cholesterol || '--')}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-on-surface border-l border-outline-variant/5">
                                     <button onClick={() => onEdit(p._id)} className="text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors flex items-center justify-center">

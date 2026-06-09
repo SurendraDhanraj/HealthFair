@@ -17,6 +17,8 @@ export default defineSchema({
     pulse: v.optional(v.number()),
     bloodSugar: v.optional(v.number()),
     cholesterol: v.optional(v.number()),
+    bloodSugarNotTested: v.optional(v.boolean()),
+    cholesterolNotTested: v.optional(v.boolean()),
     status: v.string(),
     reportFileId: v.optional(v.string()),
   }),

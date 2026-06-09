@@ -12,12 +12,64 @@ export function Vitals() {
     const [selectedId, setSelectedId] = useState(location.state?.patientId || "");
     const [height, setHeight] = useState("");
     const [weight, setWeight] = useState("");
+    const [heightUnit, setHeightUnit] = useState("cm"); // "cm" or "in"
+    const [weightUnit, setWeightUnit] = useState("kg"); // "kg" or "lbs"
+    const [initializedId, setInitializedId] = useState("");
 
     const patient = patients.find(p => p._id === selectedId);
+
+    if (selectedId !== initializedId && (patient || !selectedId || patients.length > 0)) {
+        setInitializedId(selectedId);
+        if (patient) {
+            setHeight(patient.height ? (heightUnit === "in" ? (patient.height / 2.54).toFixed(1) : patient.height.toString()) : "");
+            setWeight(patient.weight ? (weightUnit === "lbs" ? (patient.weight * 2.20462262).toFixed(1) : patient.weight.toString()) : "");
+        } else {
+            setHeight("");
+            setWeight("");
+        }
+    }
+
+    const handleHeightUnitChange = (newUnit) => {
+        if (newUnit === heightUnit) return;
+        setHeightUnit(newUnit);
+        if (height) {
+            const val = parseFloat(height);
+            if (!isNaN(val)) {
+                if (newUnit === "in") {
+                    setHeight((val / 2.54).toFixed(1));
+                } else {
+                    setHeight((val * 2.54).toFixed(1));
+                }
+            }
+        }
+    };
+
+    const handleWeightUnitChange = (newUnit) => {
+        if (newUnit === weightUnit) return;
+        setWeightUnit(newUnit);
+        if (weight) {
+            const val = parseFloat(weight);
+            if (!isNaN(val)) {
+                if (newUnit === "lbs") {
+                    setWeight((val * 2.20462262).toFixed(1));
+                } else {
+                    setWeight((val / 2.20462262).toFixed(1));
+                }
+            }
+        }
+    };
     
-    const h = parseFloat(height);
-    const w = parseFloat(weight);
-    const bmi = (h && w) ? (w / Math.pow(h / 100, 2)).toFixed(1) : "--";
+    const hNum = parseFloat(height);
+    const wNum = parseFloat(weight);
+    
+    let bmi = "--";
+    if (hNum && wNum && !isNaN(hNum) && !isNaN(wNum)) {
+        const h_m = heightUnit === "in" ? hNum * 0.0254 : hNum / 100;
+        const w_kg = weightUnit === "lbs" ? wNum * 0.45359237 : wNum;
+        if (h_m > 0) {
+            bmi = (w_kg / (h_m * h_m)).toFixed(1);
+        }
+    }
 
     const bmiVal = parseFloat(bmi);
     let bmiOffset = "50%";
@@ -36,10 +88,28 @@ export function Vitals() {
     const handleSave = async () => {
         if (!selectedId) return;
         try {
+            const hNum = parseFloat(height);
+            const wNum = parseFloat(weight);
+            
+            const updates = {};
+            if (hNum && !isNaN(hNum)) {
+                const heightInCm = heightUnit === "in" ? hNum * 2.54 : hNum;
+                updates.height = parseFloat(heightInCm.toFixed(1));
+            }
+            if (wNum && !isNaN(wNum)) {
+                const weightInKg = weightUnit === "lbs" ? wNum * 0.45359237 : wNum;
+                updates.weight = parseFloat(weightInKg.toFixed(1));
+            }
+            
+            const bmiVal = parseFloat(bmi);
+            if (bmiVal && !isNaN(bmiVal)) {
+                updates.bmi = bmiVal;
+            }
+            
             if (api?.patients?.updatePatient) {
                 await updatePatient({ 
                     id: selectedId, 
-                    updates: { height: h, weight: w, bmi: parseFloat(bmi) } 
+                    updates
                 });
             }
             navigate("/");
@@ -118,18 +188,70 @@ export function Vitals() {
                         </div>
 
                         <div className="bg-white rounded-lg p-6 border border-outline-variant/30 shadow-sm space-y-6">
-                            <div className="flex items-center gap-2 mb-2 border-b border-surface-variant pb-4">
-                                <span className="material-symbols-outlined text-primary">straighten</span>
-                                <h3 className="font-bold text-lg">Measurements</h3>
+                            <div className="flex items-center justify-between mb-2 border-b border-surface-variant pb-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">straighten</span>
+                                    <h3 className="font-bold text-lg">Measurements</h3>
+                                </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-semibold text-on-surface-variant">Height (cm)</label>
-                                    <input value={height} onChange={e=>setHeight(e.target.value)} className="w-full h-14 px-4 rounded-lg border border-outline-variant bg-surface text-2xl font-bold text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="175" type="number"/>
+                                <div className="space-y-2.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-semibold text-on-surface-variant">Height ({heightUnit})</label>
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleHeightUnitChange("cm")}
+                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${heightUnit === "cm" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400"}`}
+                                            >
+                                                cm
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleHeightUnitChange("in")}
+                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${heightUnit === "in" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400"}`}
+                                            >
+                                                in
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input 
+                                        value={height} 
+                                        onChange={e=>setHeight(e.target.value)} 
+                                        className="w-full h-14 px-4 rounded-lg border border-outline-variant bg-surface text-2xl font-bold text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" 
+                                        placeholder={heightUnit === "cm" ? "175" : "69"} 
+                                        type="number"
+                                        step="any"
+                                    />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-semibold text-on-surface-variant">Weight (kg)</label>
-                                    <input value={weight} onChange={e=>setWeight(e.target.value)} className="w-full h-14 px-4 rounded-lg border border-outline-variant bg-surface text-2xl font-bold text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="70" type="number"/>
+                                <div className="space-y-2.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-semibold text-on-surface-variant">Weight ({weightUnit})</label>
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleWeightUnitChange("kg")}
+                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${weightUnit === "kg" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400"}`}
+                                            >
+                                                kg
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleWeightUnitChange("lbs")}
+                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${weightUnit === "lbs" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400"}`}
+                                            >
+                                                lbs
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input 
+                                        value={weight} 
+                                        onChange={e=>setWeight(e.target.value)} 
+                                        className="w-full h-14 px-4 rounded-lg border border-outline-variant bg-surface text-2xl font-bold text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" 
+                                        placeholder={weightUnit === "kg" ? "70" : "154"} 
+                                        type="number"
+                                        step="any"
+                                    />
                                 </div>
                             </div>
                         </div>
